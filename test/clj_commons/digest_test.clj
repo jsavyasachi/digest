@@ -17,8 +17,12 @@
     (is (names "SHA-1"))))
 
 (deftest utils-test
-  (for [name (d/algorithms)]
-    (dorun (is (ns-resolve *ns* (symbol (lower-case name)))))))
+  ;; Every algorithm the JVM exposes must have a matching convenience fn -
+  ;; statically generated for the standard set, interned by the fallback for
+  ;; the rest. (Previously a lazy `for`, so these assertions never ran.)
+  (doseq [name (d/algorithms)]
+    (is (ns-resolve 'clj-commons.digest (symbol (lower-case name)))
+        (str "missing convenience fn for " name))))
 
 (deftest function-metadata-test
   (is (includes? (:doc (meta #'d/sha-256))

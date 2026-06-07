@@ -17,8 +17,10 @@
     (is (names "SHA-1"))))
 
 (deftest utils-test
-  (for [name (algorithms)]
-    (dorun (is (ns-resolve *ns* (symbol (lower-case name)))))))
+  ;; Previously a lazy `for`, so these assertions never ran.
+  (doseq [name (algorithms)]
+    (is (ns-resolve 'digest (symbol (lower-case name)))
+        (str "missing convenience fn for " name))))
 
 (deftest function-metadata-test
   (is (includes? (:doc (meta #'sha-256))
