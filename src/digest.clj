@@ -94,12 +94,97 @@
                 (partial digest algorithm-name))
         (alter-meta! update-meta))))
 
-(defn- create-fns
-  "Create utility function for each digest algorithms.
-   For example will create an md5 function for MD5 algorithm."
+;; The convenience fns below are statically defined (rather than interned at
+;; load time) so clj-kondo and cljdoc can see them. They are produced by
+;; dev/gen.clj from the standard JCA algorithm set; do not edit by hand.
+;; >>> generated convenience fns - run `bb dev/gen.clj` to regenerate >>>
+(defn md2
+  "Encode the given message with the MD2 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "MD2" message))
+
+(defn md5
+  "Encode the given message with the MD5 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "MD5" message))
+
+(defn sha
+  "Encode the given message with the SHA algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "SHA" message))
+
+(defn sha1
+  "Encode the given message with the SHA1 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "SHA1" message))
+
+(defn sha-1
+  "Encode the given message with the SHA-1 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "SHA-1" message))
+
+(defn sha-224
+  "Encode the given message with the SHA-224 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "SHA-224" message))
+
+(defn sha-256
+  "Encode the given message with the SHA-256 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "SHA-256" message))
+
+(defn sha-384
+  "Encode the given message with the SHA-384 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "SHA-384" message))
+
+(defn sha-512
+  "Encode the given message with the SHA-512 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "SHA-512" message))
+
+(defn sha3-224
+  "Encode the given message with the SHA3-224 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "SHA3-224" message))
+
+(defn sha3-256
+  "Encode the given message with the SHA3-256 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "SHA3-256" message))
+
+(defn sha3-384
+  "Encode the given message with the SHA3-384 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "SHA3-384" message))
+
+(defn sha3-512
+  "Encode the given message with the SHA3-512 algorithm."
+  {:arglists '([message])}
+  [message]
+  (digest "SHA3-512" message))
+;; <<< end generated convenience fns <<<
+
+(defn- create-missing-fns!
+  "Intern convenience fns for any algorithms this JVM exposes beyond the
+  generated standard set above (e.g. additional security providers), so every
+  algorithm in `(algorithms)` has a matching var."
   []
-  (doseq [algorithm (algorithms)]
+  (doseq [algorithm (algorithms)
+          :let  [fn-sym (symbol (lower-case algorithm))]
+          :when (not (ns-resolve 'digest fn-sym))]
     (create-fn! algorithm)))
 
-; Create utility functions such as md5, sha-256 ...
-(create-fns)
+(create-missing-fns!)
