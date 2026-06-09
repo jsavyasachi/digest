@@ -76,8 +76,7 @@ clojars_password="$(op item get Clojars --fields 'deploy token' --reveal)" \
 lein deploy clojars
 ```
 
-GitHub Actions deploys `Release-*` tags to Clojars. Configure repository secrets:
-`CLOJARS_USERNAME` and `CLOJARS_PASSWORD`.
+Publishing is manual, matching the Beckon maintenance fork workflow.
 
 # License
 Copyright&copy; 2017 Miki Tebeka <miki.tebeka@gmail.com>
