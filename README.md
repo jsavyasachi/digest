@@ -76,8 +76,6 @@ clojars_password="$(op item get Clojars --fields 'deploy token' --reveal)" \
 lein deploy clojars
 ```
 
-Publishing is manual, matching the Beckon maintenance fork workflow.
-
 # License
 Copyright&copy; 2017 Miki Tebeka <miki.tebeka@gmail.com>
 
