@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - Release-*
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (JDK ${{ matrix.java }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java:
+          - '8'
+          - '11'
+          - '17'
+          - '21'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+
+      - uses: DeLaGuardo/setup-clojure@13.4
+        with:
+          lein: latest
+
+      - run: lein test
+
+  deploy:
+    name: Deploy to Clojars
+    if: startsWith(github.ref, 'refs/tags/Release-')
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      clojars_username: ${{ secrets.CLOJARS_USERNAME }}
+      clojars_password: ${{ secrets.CLOJARS_PASSWORD }}
+      GPG_KEY: ${{ secrets.GPG_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: maven
+
+      - uses: DeLaGuardo/setup-clojure@13.4
+        with:
+          lein: latest
+
+      - name: Check deploy secrets
+        run: |
+          test -n "$clojars_username"
+          test -n "$clojars_password"
+          test -n "$GPG_KEY"
+
+      - name: Import GPG signing key
+        run: |
+          GNUPGHOME="$HOME/.gnupg"
+          export GNUPGHOME
+          mkdir -p "$GNUPGHOME"
+          chmod 0700 "$GNUPGHOME"
+          echo "$GPG_KEY" | base64 --decode --ignore-garbage | gpg --batch --allow-secret-key-import --import
+          gpg --keyid-format LONG --list-secret-keys
+
+      - run: lein deploy clojars

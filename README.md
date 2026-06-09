@@ -5,11 +5,11 @@
 ## Stack
 
 <a href="https://clojure.org"><img src="https://img.shields.io/badge/Clojure-5881D8?style=flat&logo=clojure&logoColor=white" alt="Clojure" /></a>
-<a href="https://circleci.com"><img src="https://img.shields.io/badge/CircleCI-343434?style=flat&logo=circleci&logoColor=white" alt="CircleCI" /></a>
+<a href="https://github.com/features/actions"><img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat&logo=githubactions&logoColor=white" alt="GitHub Actions" /></a>
 
 [![Clojars Project](https://img.shields.io/clojars/v/org.clj-commons/digest.svg)](https://clojars.org/org.clj-commons/digest)
 [![cljdoc badge](https://cljdoc.org/badge/org.clj-commons/digest)](https://cljdoc.org/d/org.clj-commons/digest)
-[![CircleCI Status](https://circleci.com/gh/clj-commons/digest.svg?style=svg)](https://circleci.com/gh/clj-commons/digest)
+[![CI](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml/badge.svg)](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml)
 
 There are several digest functions (such as `md5`, `sha-256` ...) in this
 namespace. Each can handle the following input types:
@@ -51,6 +51,8 @@ org.clj-commons/digest {:mvn/version "1.4.100"}
 
 # Dev
 
+Run `lein test` to run the test suite.
+
 Run `bb dev/gen.clj` after changing the generated static digest convenience
 functions.
 
@@ -60,6 +62,9 @@ Run `bb deploy` to deploy using the clj-commons
 [release](https://github.com/clj-commons/infra/blob/main/deployment/release.bb)
 script or create a tag manually in the format `Release-1.4.<commit-count>` and
 push it.
+
+GitHub Actions deploys `Release-*` tags to Clojars. Configure repository secrets:
+`CLOJARS_USERNAME`, `CLOJARS_PASSWORD`, and base64-encoded `GPG_KEY`.
 
 # License
 Copyright&copy; 2017 Miki Tebeka <miki.tebeka@gmail.com>
