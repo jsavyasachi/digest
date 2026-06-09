@@ -2,7 +2,12 @@
   (:require [clj-commons.digest :as d]
             [clojure.string :refer [lower-case includes?]]
             [clojure.test :refer [deftest is]])
-  (:import java.io.File))
+  (:import (java.io ByteArrayInputStream File)
+           (java.nio.charset StandardCharsets)
+           java.security.NoSuchAlgorithmException))
+
+(defn utf-8-bytes [s]
+  (.getBytes s StandardCharsets/UTF_8))
 
 (deftest md5-test
   (is (= (d/digest "md5" "clojure") "32c0d97f82a20e67c6d184620f6bd322")))
@@ -10,6 +15,35 @@
 (deftest sha-256-test
   (is (= (d/sha-256 "clojure")
          "4f3ea34e0a3a6196a18ec24b51c02b41d5f15bd04b4a94aa29e4f6badba0f5b0")))
+
+(deftest byte-array-test
+  (is (= (d/md5 (utf-8-bytes "clojure"))
+         "32c0d97f82a20e67c6d184620f6bd322")))
+
+(deftest input-stream-test
+  (is (= (d/md5 (ByteArrayInputStream. (utf-8-bytes "clojure")))
+         "32c0d97f82a20e67c6d184620f6bd322")))
+
+(deftest byte-array-sequence-test
+  (is (= (d/md5 [(utf-8-bytes "clo")
+                 (utf-8-bytes "jure")])
+         "32c0d97f82a20e67c6d184620f6bd322")))
+
+(deftest empty-input-test
+  (is (= (d/md5 "") "d41d8cd98f00b204e9800998ecf8427e"))
+  (is (= (d/md5 (byte-array 0)) "d41d8cd98f00b204e9800998ecf8427e"))
+  (is (= (d/md5 []) "d41d8cd98f00b204e9800998ecf8427e"))
+  (is (= (d/md5 (ByteArrayInputStream. (byte-array 0)))
+         "d41d8cd98f00b204e9800998ecf8427e")))
+
+(deftest input-stream-buffer-boundary-test
+  (binding [d/*buffer-size* 3]
+    (is (= (d/sha-256 (ByteArrayInputStream. (utf-8-bytes "clojure")))
+           "4f3ea34e0a3a6196a18ec24b51c02b41d5f15bd04b4a94aa29e4f6badba0f5b0"))))
+
+(deftest string-uses-utf-8-compatible-bytes-test
+  (is (= (d/sha-256 "café")
+         (d/sha-256 (utf-8-bytes "café")))))
 
 (deftest algorithms-test
   (let [names (d/algorithms)]
@@ -41,8 +75,12 @@
 
 ; Just making sure that we don't explode on nil
 (deftest nil-test
-  (d/md5 nil))
+  (is (nil? (d/md5 nil))))
 
 (deftest length-test
   (is (= (d/sha (File. "test/quote.txt"))
          "dc93ad3c1e212bf598b9bf700914e832c9bdade5")))
+
+(deftest invalid-algorithm-test
+  (is (thrown? NoSuchAlgorithmException
+               (d/digest "NOPE" "clojure"))))

@@ -1,5 +1,6 @@
 (ns digest-test
-  (:require [clojure.string :refer [lower-case includes?]]
+  (:require [clj-commons.digest :as canonical]
+            [clojure.string :refer [lower-case includes?]]
             [clojure.test :refer :all]
             [digest :refer :all])
   (:import java.io.File))
@@ -10,6 +11,24 @@
 (deftest sha-256-test
   (is (= (sha-256 "clojure")
          "4f3ea34e0a3a6196a18ec24b51c02b41d5f15bd04b4a94aa29e4f6badba0f5b0")))
+
+(deftest legacy-namespace-parity-test
+  (doseq [[algorithm legacy canonical] [["MD2" md2 canonical/md2]
+                                        ["MD5" md5 canonical/md5]
+                                        ["SHA" sha canonical/sha]
+                                        ["SHA1" sha1 canonical/sha1]
+                                        ["SHA-1" sha-1 canonical/sha-1]
+                                        ["SHA-224" sha-224 canonical/sha-224]
+                                        ["SHA-256" sha-256 canonical/sha-256]
+                                        ["SHA-384" sha-384 canonical/sha-384]
+                                        ["SHA-512" sha-512 canonical/sha-512]
+                                        ["SHA3-224" sha3-224 canonical/sha3-224]
+                                        ["SHA3-256" sha3-256 canonical/sha3-256]
+                                        ["SHA3-384" sha3-384 canonical/sha3-384]
+                                        ["SHA3-512" sha3-512 canonical/sha3-512]]
+          :when ((canonical/algorithms) algorithm)]
+    (is (= (legacy "clojure")
+           (canonical "clojure")))))
 
 (deftest algorithms-test
   (let [names (algorithms)]
@@ -39,7 +58,7 @@
 
 ; Just making sure that we don't explode on nil
 (deftest nil-test
-  (md5 nil))
+  (is (nil? (md5 nil))))
 
 (deftest length-test
   (is (= (sha (File. "test/quote.txt"))
