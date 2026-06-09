@@ -30,6 +30,18 @@
     (is (= (legacy "clojure")
            (canonical "clojure")))))
 
+(deftest legacy-helper-parity-test
+  (is (= (seq (digest-bytes "MD5" "clojure"))
+         (seq (canonical/digest-bytes "MD5" "clojure"))))
+  (is (= (digest-base64 "MD5" "clojure")
+         (canonical/digest-base64 "MD5" "clojure")))
+  (is (= (hmac "HmacSHA256" "secret" "message")
+         (canonical/hmac "HmacSHA256" "secret" "message")))
+  (is (= (hmac-sha-256 "secret" "message")
+         (canonical/hmac-sha-256 "secret" "message")))
+  (is (= (algorithm? "SHA-256")
+         (canonical/algorithm? "SHA-256"))))
+
 (deftest algorithms-test
   (let [names (algorithms)]
     (is (not (empty? names)))

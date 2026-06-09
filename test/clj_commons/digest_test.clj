@@ -3,6 +3,7 @@
             [clojure.string :refer [lower-case includes?]]
             [clojure.test :refer [deftest is]])
   (:import (java.io ByteArrayInputStream File)
+           java.util.Base64
            (java.nio.charset StandardCharsets)
            java.security.NoSuchAlgorithmException))
 
@@ -19,6 +20,17 @@
 (deftest byte-array-test
   (is (= (d/md5 (utf-8-bytes "clojure"))
          "32c0d97f82a20e67c6d184620f6bd322")))
+
+(deftest digest-bytes-test
+  (is (= (seq (d/digest-bytes "MD5" "clojure"))
+         (seq (d/digest-bytes "MD5" (utf-8-bytes "clojure")))))
+  (is (= (d/digest "MD5" "clojure")
+         (format "%032x" (BigInteger. 1 (d/digest-bytes "MD5" "clojure"))))))
+
+(deftest digest-base64-test
+  (is (= (d/digest-base64 "MD5" "clojure")
+         (.encodeToString (Base64/getEncoder)
+                          (d/digest-bytes "MD5" "clojure")))))
 
 (deftest input-stream-test
   (is (= (d/md5 (ByteArrayInputStream. (utf-8-bytes "clojure")))
@@ -43,12 +55,37 @@
 
 (deftest string-uses-utf-8-compatible-bytes-test
   (is (= (d/sha-256 "café")
+         (d/sha-256 (utf-8-bytes "café"))))
+  (is (= (d/digest "SHA-256" "café" "UTF-8")
          (d/sha-256 (utf-8-bytes "café")))))
+
+(deftest file-digest-helper-test
+  (let [f (File. "test/snail.png")]
+    (is (= (d/file-digest "MD5" f) (d/md5 f)))
+    (is (= (d/file-sha-256 f) (d/sha-256 f)))))
+
+(deftest hmac-test
+  (is (= (d/hmac "HmacSHA256" "secret" "message")
+         "8b5f48702995c1598c573db1e21866a9b825d4a794d169d7060a03605796360b"))
+  (is (= (d/hmac-sha-256 "secret" "message")
+         (d/hmac "HmacSHA256" "secret" "message")))
+  (is (= (d/hmac-base64 "HmacSHA256" "secret" "message")
+         (.encodeToString (Base64/getEncoder)
+                          (d/hmac-bytes "HmacSHA256" "secret" "message")))))
+
+(deftest secure-eq-test
+  (is (d/secure-eq? (d/digest-bytes "SHA-256" "a")
+                    (d/digest-bytes "SHA-256" "a")))
+  (is (not (d/secure-eq? (d/digest-bytes "SHA-256" "a")
+                         (d/digest-bytes "SHA-256" "b")))))
 
 (deftest algorithms-test
   (let [names (d/algorithms)]
     (is (seq names))
-    (is (names "SHA-1"))))
+    (is (names "SHA-1"))
+    (is (d/algorithm? "SHA-1"))
+    (is (not (d/algorithm? "NOPE")))
+    (is (contains? d/standard-algorithms "SHA-256"))))
 
 (deftest utils-test
   ;; Every algorithm the JVM exposes must have a matching convenience fn -

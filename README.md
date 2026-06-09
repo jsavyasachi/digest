@@ -1,14 +1,14 @@
-# clj-commons/digest
+# digest
 
-`clj-commons/digest` - A message digest library for Clojure. Providing `md5`, `sha-256`, ...
+`net.clojars.savya/digest` - A message digest library for Clojure. Providing `md5`, `sha-256`, HMAC, raw bytes, and base64 output.
 
 ## Stack
 
 <a href="https://clojure.org"><img src="https://img.shields.io/badge/Clojure-5881D8?style=flat&logo=clojure&logoColor=white" alt="Clojure" /></a>
 <a href="https://github.com/features/actions"><img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat&logo=githubactions&logoColor=white" alt="GitHub Actions" /></a>
 
-[![Clojars Project](https://img.shields.io/clojars/v/org.clj-commons/digest.svg)](https://clojars.org/org.clj-commons/digest)
-[![cljdoc badge](https://cljdoc.org/badge/org.clj-commons/digest)](https://cljdoc.org/d/org.clj-commons/digest)
+[![Clojars Project](https://img.shields.io/clojars/v/net.clojars.savya/digest.svg)](https://clojars.org/net.clojars.savya/digest)
+[![cljdoc badge](https://cljdoc.org/badge/net.clojars.savya/digest)](https://cljdoc.org/d/net.clojars.savya/digest)
 [![CI](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml/badge.svg)](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml)
 
 There are several digest functions (such as `md5`, `sha-256` ...) in this
@@ -33,6 +33,15 @@ user=> (require '[clojure.java.io :as io])
 nil
 user=> (digest/sha-256 (io/file "/tmp/hello.txt"))
 "163883d3e0e3b0c028d35b626b98564be8d9d649ed8adb8b929cb8c94c735c59"
+; Raw bytes
+user=> (seq (digest/digest-bytes "MD5" "clojure"))
+(50 -64 -39 127 -126 -94 14 103 -58 -47 -124 98 15 107 -45 34)
+; Base64
+user=> (digest/digest-base64 "MD5" "clojure")
+"MsDZf4KiDmfG0YRiD2vTIg=="
+; HMAC
+user=> (digest/hmac-sha-256 "secret" "message")
+"8b5f48702995c1598c573db1e21866a9b825d4a794d169d7060a03605796360b"
 ```
 
 # Installation
@@ -40,13 +49,13 @@ user=> (digest/sha-256 (io/file "/tmp/hello.txt"))
 ## deps.edn
 
 ``` clojure
-org.clj-commons/digest {:mvn/version "1.4.100"}
+net.clojars.savya/digest {:mvn/version "1.5.0"}
 ```
 
 ## lein
 
 ``` clojure
-[org.clj-commons/digest "1.4.100"]
+[net.clojars.savya/digest "1.5.0"]
 ```
 
 # Dev
@@ -58,16 +67,23 @@ functions.
 
 ## Deployment
 
-Run `bb deploy` to deploy using the clj-commons
-[release](https://github.com/clj-commons/infra/blob/main/deployment/release.bb)
-script or create a tag manually in the format `Release-1.4.<commit-count>` and
-push it.
+Run `lein deploy clojars` with `clojars_username` and `clojars_password` set.
+The password must be a Clojars deploy token, not the account password.
+
+``` shell
+clojars_username=savya \
+clojars_password="$(op item get Clojars --fields 'deploy token' --reveal)" \
+lein deploy clojars
+```
 
 GitHub Actions deploys `Release-*` tags to Clojars. Configure repository secrets:
-`CLOJARS_USERNAME`, `CLOJARS_PASSWORD`, and base64-encoded `GPG_KEY`.
+`CLOJARS_USERNAME` and `CLOJARS_PASSWORD`.
 
 # License
 Copyright&copy; 2017 Miki Tebeka <miki.tebeka@gmail.com>
+
+Maintenance fork Copyright&copy; 2026 Savya Sachi.
+Original: https://github.com/clj-commons/digest
 
 Distributed under the Eclipse Public License (same as Clojure).
 

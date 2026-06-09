@@ -1,3 +1,10 @@
+2026-06-09 version 1.5.0
+* Publish maintenance fork as net.clojars.savya/digest.
+* Add raw byte and base64 digest output helpers.
+* Add HMAC helpers and constant-time byte-array comparison.
+* Add file digest convenience helpers and algorithm metadata helpers.
+* Encode strings as UTF-8 by default.
+
 2021-10-11 version 1.4.93
 * The digest namespace has moved to clj-commons.digest. The old one is deprecated.
 
