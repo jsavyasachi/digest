@@ -65,17 +65,6 @@ Run `lein test` to run the test suite.
 Run `bb dev/gen.clj` after changing the generated static digest convenience
 functions.
 
-## Deployment
-
-Run `lein deploy clojars` with `clojars_username` and `clojars_password` set.
-The password must be a Clojars deploy token, not the account password.
-
-``` shell
-clojars_username=savya \
-clojars_password="$(op item get Clojars --fields 'deploy token' --reveal)" \
-lein deploy clojars
-```
-
 # License
 Copyright&copy; 2017 Miki Tebeka <miki.tebeka@gmail.com>
 
