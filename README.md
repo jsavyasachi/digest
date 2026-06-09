@@ -79,7 +79,7 @@ lein deploy clojars
 # License
 Copyright&copy; 2017 Miki Tebeka <miki.tebeka@gmail.com>
 
-Maintenance fork Copyright&copy; 2026 Savya Sachi.
+Maintenance fork Copyright&copy; 2026 Savyasachi.
 Original: https://github.com/clj-commons/digest
 
 Distributed under the Eclipse Public License (same as Clojure).
