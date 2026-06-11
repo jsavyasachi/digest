@@ -1,4 +1,4 @@
-(defproject net.clojars.savya/digest (or (System/getenv "PROJECT_VERSION") "1.5.0")
+(defproject net.clojars.savya/digest (or (System/getenv "PROJECT_VERSION") "1.5.1")
   :description "Digest algorithms (MD5, SHA ...) for Clojure"
   :author "Miki Tebeka <miki.tebeka@gmail.com>"
   :url "https://github.com/jsavyasachi/digest"

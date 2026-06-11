@@ -1,3 +1,9 @@
+2026-06-10 version 1.5.1
+* Default to Clojure 1.12.0; test across Clojure 1.10/1.11/1.12.
+* Enable *warn-on-reflection*; the build is reflection-clean and CI enforces it.
+* Realign the deprecated single-segment digest namespace with clj-commons.digest.
+* Document the 1.5.0 UTF-8 string-encoding behavior change.
+
 2026-06-09 version 1.5.0
 * Publish maintenance fork as net.clojars.savya/digest.
 * Add raw byte and base64 digest output helpers.
