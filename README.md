@@ -20,6 +20,15 @@ namespace. Each can handle the following input types:
 * `java.io.InputStream`
 * Sequence of byte array
 
+## String encoding (behavior change in 1.5.0)
+
+Strings are encoded as **UTF-8** before hashing. Earlier releases (`1.4.x`
+and before) used the JVM's *default* charset, so on a JVM whose default was
+not UTF-8 the same string produced a different digest. As of `1.5.0` the
+output is stable regardless of platform default. If you need to reproduce a
+hash computed by an older release on a non-UTF-8 JVM, pass the encoding
+explicitly: `(digest/digest "md5" s "ISO-8859-1")`.
+
 # Usage
 
 ``` clojure
