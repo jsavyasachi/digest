@@ -4,4 +4,9 @@
   :url "https://github.com/jsavyasachi/digest"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.10.1"]])
+  :dependencies [[org.clojure/clojure "1.12.0"]]
+  :global-vars {*warn-on-reflection* true}
+  :profiles {:clojure-1-10 {:dependencies [[org.clojure/clojure "1.10.3"]]}
+             :clojure-1-11 {:dependencies [[org.clojure/clojure "1.11.4"]]}
+             :clojure-1-12 {:dependencies [[org.clojure/clojure "1.12.0"]]}}
+  :aliases {"all" ["with-profile" "+clojure-1-10:+clojure-1-11:+clojure-1-12"]})

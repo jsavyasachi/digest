@@ -7,7 +7,7 @@
            (java.nio.charset StandardCharsets)
            java.security.NoSuchAlgorithmException))
 
-(defn utf-8-bytes [s]
+(defn utf-8-bytes ^bytes [^String s]
   (.getBytes s StandardCharsets/UTF_8))
 
 (deftest md5-test
@@ -25,7 +25,7 @@
   (is (= (seq (d/digest-bytes "MD5" "clojure"))
          (seq (d/digest-bytes "MD5" (utf-8-bytes "clojure")))))
   (is (= (d/digest "MD5" "clojure")
-         (format "%032x" (BigInteger. 1 (d/digest-bytes "MD5" "clojure"))))))
+         (format "%032x" (BigInteger. 1 ^bytes (d/digest-bytes "MD5" "clojure"))))))
 
 (deftest digest-base64-test
   (is (= (d/digest-base64 "MD5" "clojure")
