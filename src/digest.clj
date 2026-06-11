@@ -174,7 +174,7 @@
        (MessageDigest/isEqual a b)))
 
 (defn algorithms
-  "List support digest algorithms."
+  "List supported digest algorithms."
   []
   (let [providers (vec (Security/getProviders))
         names (mapcat (fn [^Provider p] (enumeration-seq (.keys p))) providers)
@@ -186,7 +186,7 @@
   [algorithm]
   (contains? (algorithms) algorithm))
 
-(defn create-fn!
+(defn- create-fn!
   [algorithm-name]
   (let [update-meta (fn [meta]
                       (assoc meta
