@@ -8,8 +8,8 @@
 <a href="https://github.com/features/actions"><img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat&logo=githubactions&logoColor=white" alt="GitHub Actions" /></a>
 
 [![Clojars Project](https://img.shields.io/clojars/v/net.clojars.savya/digest.svg)](https://clojars.org/net.clojars.savya/digest)
-[![cljdoc badge](https://cljdoc.org/badge/net.clojars.savya/digest)](https://cljdoc.org/d/net.clojars.savya/digest)
-[![CI](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml/badge.svg)](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml)
+[![cljdoc](https://cljdoc.org/badge/net.clojars.savya/digest)](https://cljdoc.org/d/net.clojars.savya/digest)
+[![test](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml/badge.svg)](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml)
 
 There are several digest functions (such as `md5`, `sha-256` ...) in this
 namespace. Each can handle the following input types:
