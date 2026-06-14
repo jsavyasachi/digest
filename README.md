@@ -1,15 +1,16 @@
 # digest
 
-`net.clojars.savya/digest` - A message digest library for Clojure. Providing `md5`, `sha-256`, HMAC, raw bytes, and base64 output.
+[![Clojars Project](https://img.shields.io/clojars/v/net.clojars.savya/digest.svg)](https://clojars.org/net.clojars.savya/digest)
+[![cljdoc](https://cljdoc.org/badge/net.clojars.savya/digest)](https://cljdoc.org/d/net.clojars.savya/digest)
+[![test](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml/badge.svg)](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml)
+
+A message digest library for Clojure: `md5`, `sha-256`, HMAC, raw bytes, and
+base64 output.
 
 ## Stack
 
 <a href="https://clojure.org"><img src="https://img.shields.io/badge/Clojure-5881D8?style=flat&logo=clojure&logoColor=white" alt="Clojure" /></a>
 <a href="https://github.com/features/actions"><img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat&logo=githubactions&logoColor=white" alt="GitHub Actions" /></a>
-
-[![Clojars Project](https://img.shields.io/clojars/v/net.clojars.savya/digest.svg)](https://clojars.org/net.clojars.savya/digest)
-[![cljdoc](https://cljdoc.org/badge/net.clojars.savya/digest)](https://cljdoc.org/d/net.clojars.savya/digest)
-[![test](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml/badge.svg)](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml)
 
 There are several digest functions (such as `md5`, `sha-256` ...) in this
 namespace. Each can handle the following input types:
@@ -20,16 +21,21 @@ namespace. Each can handle the following input types:
 * `java.io.InputStream`
 * Sequence of byte array
 
-## String encoding (behavior change in 1.5.0)
+## Installation
 
-Strings are encoded as **UTF-8** before hashing. Earlier releases (`1.4.x`
-and before) used the JVM's *default* charset, so on a JVM whose default was
-not UTF-8 the same string produced a different digest. As of `1.5.0` the
-output is stable regardless of platform default. If you need to reproduce a
-hash computed by an older release on a non-UTF-8 JVM, pass the encoding
-explicitly: `(digest/digest "md5" s "ISO-8859-1")`.
+deps.edn:
 
-# Usage
+``` clojure
+net.clojars.savya/digest {:mvn/version "1.5.2"}
+```
+
+Leiningen:
+
+``` clojure
+[net.clojars.savya/digest "1.5.2"]
+```
+
+## Usage
 
 ``` clojure
 user=> (require '[clj-commons.digest :as digest])
@@ -53,28 +59,24 @@ user=> (digest/hmac-sha-256 "secret" "message")
 "8b5f48702995c1598c573db1e21866a9b825d4a794d169d7060a03605796360b"
 ```
 
-# Installation
+## String encoding (behavior change in 1.5.0)
 
-## deps.edn
+Strings are encoded as **UTF-8** before hashing. Earlier releases (`1.4.x`
+and before) used the JVM's *default* charset, so on a JVM whose default was
+not UTF-8 the same string produced a different digest. As of `1.5.0` the
+output is stable regardless of platform default. If you need to reproduce a
+hash computed by an older release on a non-UTF-8 JVM, pass the encoding
+explicitly: `(digest/digest "md5" s "ISO-8859-1")`.
 
-``` clojure
-net.clojars.savya/digest {:mvn/version "1.5.2"}
-```
-
-## lein
-
-``` clojure
-[net.clojars.savya/digest "1.5.2"]
-```
-
-# Dev
+## Dev
 
 Run `lein test` to run the test suite.
 
 Run `bb dev/gen.clj` after changing the generated static digest convenience
 functions.
 
-# License
+## License
+
 Copyright&copy; 2017 Miki Tebeka <miki.tebeka@gmail.com>
 
 Maintenance fork Copyright&copy; 2026 Savyasachi.
