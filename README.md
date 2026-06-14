@@ -58,13 +58,13 @@ user=> (digest/hmac-sha-256 "secret" "message")
 ## deps.edn
 
 ``` clojure
-net.clojars.savya/digest {:mvn/version "1.5.1"}
+net.clojars.savya/digest {:mvn/version "1.5.2"}
 ```
 
 ## lein
 
 ``` clojure
-[net.clojars.savya/digest "1.5.1"]
+[net.clojars.savya/digest "1.5.2"]
 ```
 
 # Dev

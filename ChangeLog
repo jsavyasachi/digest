@@ -1,3 +1,7 @@
+2026-06-13 version 1.5.2
+* Bump default/dev Clojure 1.12.0 to 1.12.5 (latest patch). Provided scope, so
+  no consumer impact; the 1.12 test profile now runs on the current release.
+
 2026-06-10 version 1.5.1
 * Default to Clojure 1.12.0; test across Clojure 1.10/1.11/1.12.
 * Enable *warn-on-reflection*; the build is reflection-clean and CI enforces it.
