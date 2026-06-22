@@ -1,3 +1,7 @@
+2026-06-14 version 1.5.3
+* Docs-only release: standardize the README to the canonical skeleton and unify
+  the status badges and CI workflow name. No code or dependency changes.
+
 2026-06-13 version 1.5.2
 * Bump default/dev Clojure 1.12.0 to 1.12.5 (latest patch). Provided scope, so
   no consumer impact; the 1.12 test profile now runs on the current release.
