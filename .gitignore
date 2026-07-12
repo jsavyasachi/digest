@@ -7,3 +7,5 @@ pom.xml
 pom.xml.asc
 target
 /.cpcache
+.cpcache/
+target/

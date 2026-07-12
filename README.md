@@ -2,7 +2,7 @@
 
 [![Clojars Project](https://img.shields.io/clojars/v/net.clojars.savya/digest.svg)](https://clojars.org/net.clojars.savya/digest)
 [![cljdoc](https://cljdoc.org/badge/net.clojars.savya/digest)](https://cljdoc.org/d/net.clojars.savya/digest)
-[![test](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml/badge.svg)](https://github.com/jsavyasachi/digest/actions/workflows/ci.yml)
+[![test](https://github.com/jsavyasachi/digest/actions/workflows/test.yml/badge.svg)](https://github.com/jsavyasachi/digest/actions/workflows/test.yml)
 
 A message digest library for Clojure: `md5`, `sha-256`, HMAC, raw bytes, and
 base64 output.
@@ -10,6 +10,8 @@ base64 output.
 ## Stack
 
 <a href="https://clojure.org"><img src="https://img.shields.io/badge/Clojure-5881D8?style=flat&logo=clojure&logoColor=fff" alt="Clojure" /></a>
+<a href="https://clojure.org/guides/deps_and_cli"><img src="https://img.shields.io/badge/deps.edn-5881D8?style=flat&logo=clojure&logoColor=fff" alt="deps.edn" /></a>
+<a href="https://clojure.github.io/tools.build/"><img src="https://img.shields.io/badge/tools.build-5881D8?style=flat&logo=clojure&logoColor=fff" alt="tools.build" /></a>
 
 There are several digest functions (such as `md5`, `sha-256` ...) in this
 namespace. Each can handle the following input types:
@@ -22,13 +24,13 @@ namespace. Each can handle the following input types:
 
 ## Installation
 
-deps.edn:
+tools.deps (`deps.edn`):
 
 ``` clojure
 net.clojars.savya/digest {:mvn/version "1.5.3"}
 ```
 
-Leiningen:
+Leiningen (`project.clj`):
 
 ``` clojure
 [net.clojars.savya/digest "1.5.3"]
@@ -69,7 +71,10 @@ explicitly: `(digest/digest "md5" s "ISO-8859-1")`.
 
 ## Dev
 
-Run `lein test` to run the test suite.
+Run `clojure -M:test` to run the test suite.
+
+Run `clojure -T:build jar` to build the JAR, or `clojure -T:build deploy`
+to deploy it.
 
 Run `bb dev/gen.clj` after changing the generated static digest convenience
 functions.
