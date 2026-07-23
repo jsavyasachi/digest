@@ -27,13 +27,13 @@ namespace. Each can handle the following input types:
 tools.deps (`deps.edn`):
 
 ``` clojure
-net.clojars.savya/digest {:mvn/version "1.5.3"}
+net.clojars.savya/digest {:mvn/version "1.5.4"}
 ```
 
 Leiningen (`project.clj`):
 
 ``` clojure
-[net.clojars.savya/digest "1.5.3"]
+[net.clojars.savya/digest "1.5.4"]
 ```
 
 ## Usage
