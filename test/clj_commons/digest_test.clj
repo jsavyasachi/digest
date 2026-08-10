@@ -88,9 +88,9 @@
     (is (contains? d/standard-algorithms "SHA-256"))))
 
 (deftest utils-test
-  ;; Every algorithm the JVM exposes must have a matching convenience fn -
-  ;; statically generated for the standard set, interned by the fallback for
-  ;; the rest. (Previously a lazy `for`, so these assertions never ran.)
+  ;; Every algorithm that the JVM supplies must have a matching convenience fn.
+  ;; The standard set is statically generated. The fallback interns the rest.
+  ;; (Previously a lazy `for`, so these assertions never ran.)
   (doseq [name (d/algorithms)]
     (is (ns-resolve 'clj-commons.digest (symbol (lower-case name)))
         (str "missing convenience fn for " name))))
@@ -110,7 +110,7 @@
     (is (= (d/md5 f) *image-md5*))
     (is (= (d/sha-1 f) *image-sha1*))))
 
-; Just making sure that we don't explode on nil
+; Make sure that nil input does not cause an error
 (deftest nil-test
   (is (nil? (d/md5 nil))))
 

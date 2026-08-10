@@ -56,7 +56,7 @@
     (.update ^Mac mac ^bytes message))
 
   java.util.Collection
-  ;; Code "borrowed" from
+  ;; Code from
   ;; * http://www.holygoat.co.uk/blog/entry/2009-03-26-1
   ;; * http://www.rgagnon.com/javadetails/java-0416.html
   (-update-digest! [message algorithm encoding]
@@ -194,9 +194,9 @@
                 (partial digest algorithm-name))
         (alter-meta! update-meta))))
 
-;; The convenience fns below are statically defined (rather than interned at
-;; load time) so clj-kondo and cljdoc can see them. They are produced by
-;; dev/gen.clj from the standard JCA algorithm set; do not edit by hand.
+;; The convenience fns below are static. They are not interned at load time,
+;; so clj-kondo and cljdoc can see them. dev/gen.clj makes them from the
+;; standard JCA algorithm set. Do not edit them by hand.
 ;; >>> generated convenience fns - run `bb dev/gen.clj` to regenerate >>>
 (defn md2
   "Encode the given message with the MD2 algorithm."
@@ -278,9 +278,9 @@
 ;; <<< end generated convenience fns <<<
 
 (defn- create-missing-fns!
-  "Intern convenience fns for any algorithms this JVM exposes beyond the
-  generated standard set above (e.g. additional security providers), so every
-  algorithm in `(algorithms)` has a matching var."
+  "Intern convenience fns for the algorithms that this JVM supplies in addition
+  to the generated standard set above. Additional security providers can supply
+  these algorithms. Each algorithm in `(algorithms)` then has a matching var."
   []
   (doseq [algorithm (algorithms)
           :let  [fn-sym (symbol (lower-case algorithm))]

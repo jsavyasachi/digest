@@ -68,7 +68,7 @@
     (is (= (md5 f) *image-md5*))
     (is (= (sha-1 f) *image-sha1*))))
 
-; Just making sure that we don't explode on nil
+; Make sure that nil input does not cause an error
 (deftest nil-test
   (is (nil? (md5 nil))))
 

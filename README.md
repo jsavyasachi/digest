@@ -13,8 +13,8 @@ base64 output.
 <a href="https://clojure.org/guides/deps_and_cli"><img src="https://img.shields.io/badge/deps.edn-5881D8?style=flat&logo=clojure&logoColor=fff" alt="deps.edn" /></a>
 <a href="https://clojure.github.io/tools.build/"><img src="https://img.shields.io/badge/tools.build-5881D8?style=flat&logo=clojure&logoColor=fff" alt="tools.build" /></a>
 
-There are several digest functions (such as `md5`, `sha-256` ...) in this
-namespace. Each can handle the following input types:
+This namespace has several digest functions, such as `md5` and `sha-256`.
+Each function accepts these input types:
 
 * `java.lang.String`
 * `byte array`
@@ -62,12 +62,12 @@ user=> (digest/hmac-sha-256 "secret" "message")
 
 ## String encoding (behavior change in 1.5.0)
 
-Strings are encoded as **UTF-8** before hashing. Earlier releases (`1.4.x`
-and before) used the JVM's *default* charset, so on a JVM whose default was
-not UTF-8 the same string produced a different digest. As of `1.5.0` the
-output is stable regardless of platform default. If you need to reproduce a
-hash computed by an older release on a non-UTF-8 JVM, pass the encoding
-explicitly: `(digest/digest "md5" s "ISO-8859-1")`.
+The library encodes strings as **UTF-8** before it hashes them. Earlier
+releases (`1.4.x` and before) used the JVM's *default* charset. On a JVM with
+a different default charset, the same string gave a different digest. Release
+`1.5.0` and later give the same output on all platforms. To get the same hash
+as an older release on such a JVM, give the encoding:
+`(digest/digest "md5" s "ISO-8859-1")`.
 
 ## Dev
 
