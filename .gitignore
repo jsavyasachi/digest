@@ -9,3 +9,4 @@ target
 /.cpcache
 .cpcache/
 target/
+release-notes.md
