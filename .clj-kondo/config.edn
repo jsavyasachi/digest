@@ -1,0 +1,5 @@
+{:linters
+ {:syntax
+  ;; Runtime byte-array class expressions in extend-protocol are valid Clojure,
+  ;; but clj-kondo parses them as malformed protocol method declarations.
+  {:level :warning}}}
