@@ -53,9 +53,9 @@
 
 (extend-protocol Digestible
   (class (make-array Byte/TYPE 0))
-  (-update-digest! [message algorithm encoding]
+  (-update-digest! [message algorithm _encoding]
     (.update ^MessageDigest algorithm ^bytes message))
-  (-update-mac! [message mac encoding]
+  (-update-mac! [message mac _encoding]
     (.update ^Mac mac ^bytes message))
 
   java.util.Collection
@@ -90,9 +90,9 @@
       (-update-mac! f mac encoding)))
 
   nil
-  (-update-digest! [message algorithm encoding]
+  (-update-digest! [_message _algorithm _encoding]
     nil)
-  (-update-mac! [message mac encoding]
+  (-update-mac! [_message _mac _encoding]
     nil))
 
 (def standard-algorithms
