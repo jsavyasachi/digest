@@ -42,6 +42,26 @@
   (is (= (algorithm? "SHA-256")
          (canonical/algorithm? "SHA-256"))))
 
+(deftest hmac-convenience-functions-test
+  (doseq [[legacy canonical expected] [[hmac-sha1 canonical/hmac-sha1
+                                       "de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9"]
+                                      [hmac-sha-256 canonical/hmac-sha-256
+                                       "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"]
+                                      [hmac-sha384 canonical/hmac-sha384
+                                       "d7f4727e2c0b39ae0f1e40cc96f60242d5b7801841cea6fc592c5d3e1ae50700582a96cf35e1e554995fe4e03381c237"]
+                                      [hmac-sha512 canonical/hmac-sha512
+                                       "b42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a"]
+                                      [hmac-sha3-224 canonical/hmac-sha3-224
+                                       "ff6fa8447ce10fb1efdccfe62caf8b640fe46c4fb1007912bf85100f"]
+                                      [hmac-sha3-256 canonical/hmac-sha3-256
+                                       "8c6e0683409427f8931711b10ca92a506eb1fafa48fadd66d76126f47ac2c333"]
+                                      [hmac-sha3-384 canonical/hmac-sha3-384
+                                       "aa739ad9fcdf9be4a04f06680ade7a1bd1e01a0af64accb04366234cf9f6934a0f8589772f857681fcde8acc256091a2"]
+                                      [hmac-sha3-512 canonical/hmac-sha3-512
+                                       "237a35049c40b3ef5ddd960b3dc893d8284953b9a4756611b1b61bffcf53edd979f93547db714b06ef0a692062c609b70208ab8d4a280ceee40ed8100f293063"]]]
+    (is (= expected (legacy "key" "The quick brown fox jumps over the lazy dog")))
+    (is (= expected (canonical "key" "The quick brown fox jumps over the lazy dog")))))
+
 (deftest algorithms-test
   (let [names (algorithms)]
     (is (not (empty? names)))
