@@ -27,13 +27,13 @@ Each function accepts these input types:
 tools.deps (`deps.edn`):
 
 ``` clojure
-net.clojars.savya/digest {:mvn/version "1.5.4"}
+net.clojars.savya/digest {:mvn/version "1.6.0"}
 ```
 
 Leiningen (`project.clj`):
 
 ``` clojure
-[net.clojars.savya/digest "1.5.4"]
+[net.clojars.savya/digest "1.6.0"]
 ```
 
 ## Usage
@@ -52,6 +52,11 @@ user=> (digest/sha-256 (io/file "/tmp/hello.txt"))
 ; Raw bytes
 user=> (seq (digest/digest-bytes "MD5" "clojure"))
 (50 -64 -39 127 -126 -94 14 103 -58 -47 -124 98 15 107 -45 34)
+; Hex encoding utilities
+user=> (digest/bytes->hex (byte-array [(byte 0) (byte -1)]))
+"00ff"
+user=> (seq (digest/hex->bytes "00FF"))
+(0 -1)
 ; Base64
 user=> (digest/digest-base64 "MD5" "clojure")
 "MsDZf4KiDmfG0YRiD2vTIg=="

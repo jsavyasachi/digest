@@ -1,2 +1,4 @@
 #kaocha/v1
-{}
+{:kaocha.filter/skip-meta #profile {:default [:benchmark]
+                                    :ci [:benchmark]
+                                    :benchmark []}}

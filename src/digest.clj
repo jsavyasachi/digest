@@ -5,38 +5,68 @@
     :deprecated true
     :no-doc true}
   digest
+  (:refer-clojure :exclude [reset!])
   (:require [clojure.string :refer [join lower-case split]])
   (:import (java.io File FileInputStream InputStream)
+           java.nio.ByteBuffer
            java.nio.charset.Charset
+           java.nio.channels.ReadableByteChannel
+           java.nio.file.Files
+           java.nio.file.Path
            (java.security MessageDigest Provider Security)
            (java.util Arrays Base64)
            javax.crypto.Mac
            javax.crypto.spec.SecretKeySpec))
 
-; Default buffer size for reading
-(def ^:dynamic *buffer-size* 1024)
+; Default buffer size for streaming reads, matching the common Java I/O default.
+(def ^:dynamic *buffer-size* 65536)
 
-(defn- read-some
-  "Read some data from reader. Return [data size] if there's more to read,
-  otherwise nil."
-  [^InputStream reader]
-  (let [^bytes buffer (make-array Byte/TYPE *buffer-size*)
-        size (.read reader buffer)]
-    (when (pos? size)
-      (if (= size *buffer-size*) buffer (Arrays/copyOf buffer size)))))
-
-(defn- byte-seq
-  "Return a sequence of [data size] from reader."
-  [^InputStream reader]
-  (take-while some? (repeatedly (partial read-some reader))))
+(defn- update-from-stream!
+  [^InputStream reader updater]
+  (let [^bytes buffer (make-array Byte/TYPE *buffer-size*)]
+    (loop [size (.read reader buffer 0 *buffer-size*)]
+      (when (pos? size)
+        (updater buffer size)
+        (recur (.read reader buffer 0 *buffer-size*))))))
 
 (defn- signature
   "Get hex signature for digest bytes."
   [^bytes digest]
   (let [size (* 2 (alength digest))
-        sig (.toString (BigInteger. 1 digest) 16)
+        sig (if (zero? size)
+              ""
+              (.toString (BigInteger. 1 digest) 16))
         padding (join (repeat (- size (count sig)) "0"))]
     (str padding sig)))
+
+(defn bytes->hex
+  "Returns a lowercase hexadecimal string for byte array, or nil for nil."
+  [^bytes bytes]
+  (some-> bytes signature))
+
+(defn hex->bytes
+  "Returns bytes for a hexadecimal string, or nil for nil.
+
+  Hexadecimal input is case-insensitive and must contain an even number of
+  valid hexadecimal characters."
+  ^bytes [^String hex]
+  (when (some? hex)
+    (let [length (.length hex)]
+      (when (odd? length)
+        (throw (IllegalArgumentException.
+                "Hexadecimal string must have an even length")))
+      (let [bytes (byte-array (quot length 2))
+            chars (.toCharArray hex)]
+        (dotimes [index (quot length 2)]
+          (let [offset (* 2 index)
+                high (Character/digit (aget chars offset) 16)
+                low (Character/digit (aget chars (inc offset)) 16)]
+            (when (or (neg? high) (neg? low))
+              (throw (IllegalArgumentException.
+                      "Hexadecimal string contains an invalid character")))
+            (aset-byte bytes index
+                       (unchecked-byte (+ (* 16 high) low)))))
+        bytes))))
 
 (defn- base64 [^bytes digest]
   (.encodeToString (Base64/getEncoder) digest))
@@ -77,9 +107,39 @@
 
   InputStream
   (-update-digest! [reader algorithm encoding]
-    (-update-digest! (byte-seq reader) algorithm encoding))
+    (update-from-stream! reader
+                         (fn [^bytes buffer size]
+                           (.update ^MessageDigest algorithm buffer 0 size))))
   (-update-mac! [reader mac encoding]
-    (-update-mac! (byte-seq reader) mac encoding))
+    (update-from-stream! reader
+                         (fn [^bytes buffer size]
+                           (.update ^Mac mac buffer 0 size))))
+
+  ByteBuffer
+  (-update-digest! [buffer algorithm _encoding]
+    (.update ^MessageDigest algorithm ^ByteBuffer buffer))
+  (-update-mac! [buffer mac _encoding]
+    (.update ^Mac mac ^ByteBuffer buffer))
+
+  ReadableByteChannel
+  (-update-digest! [channel algorithm _encoding]
+    (let [^ByteBuffer buffer (ByteBuffer/allocate *buffer-size*)]
+      (loop [read (.read channel buffer)]
+        (when (not= -1 read)
+          (when (pos? read)
+            (.flip buffer)
+            (.update ^MessageDigest algorithm buffer))
+          (.clear buffer)
+          (recur (.read channel buffer))))))
+  (-update-mac! [channel mac _encoding]
+    (let [^ByteBuffer buffer (ByteBuffer/allocate *buffer-size*)]
+      (loop [read (.read channel buffer)]
+        (when (not= -1 read)
+          (when (pos? read)
+            (.flip buffer)
+            (.update ^Mac mac buffer))
+          (.clear buffer)
+          (recur (.read channel buffer))))))
 
   File
   (-update-digest! [file algorithm encoding]
@@ -89,11 +149,89 @@
     (with-open [f (FileInputStream. file)]
       (-update-mac! f mac encoding)))
 
+  Path
+  (-update-digest! [path algorithm encoding]
+    (with-open [reader (Files/newInputStream path (make-array java.nio.file.OpenOption 0))]
+      (-update-digest! reader algorithm encoding)))
+  (-update-mac! [path mac encoding]
+    (with-open [reader (Files/newInputStream path (make-array java.nio.file.OpenOption 0))]
+      (-update-mac! reader mac encoding)))
+
   nil
   (-update-digest! [_message _algorithm _encoding]
     nil)
   (-update-mac! [_message _mac _encoding]
     nil))
+
+(defprotocol IncrementalContext
+  (-context-encoding [context])
+  (-update-context! [context message encoding])
+  (-reset-context! [context])
+  (-finalize-context! [context]))
+
+(deftype DigestContext [^MessageDigest state ^String encoding]
+  IncrementalContext
+  (-context-encoding [_context]
+    encoding)
+  (-update-context! [context message update-encoding]
+    (-update-digest! message state update-encoding)
+    context)
+  (-reset-context! [context]
+    (.reset state)
+    context)
+  (-finalize-context! [_context]
+    (.digest state)))
+
+(deftype HmacContext [^Mac state ^String encoding]
+  IncrementalContext
+  (-context-encoding [_context]
+    encoding)
+  (-update-context! [context message update-encoding]
+    (-update-mac! message state update-encoding)
+    context)
+  (-reset-context! [context]
+    (.reset state)
+    context)
+  (-finalize-context! [_context]
+    (.doFinal state)))
+
+(defn digest-context
+  "Create a stateful digest context for algorithm."
+  ([algorithm]
+   (digest-context algorithm "UTF-8"))
+  ([algorithm encoding]
+   (DigestContext. (MessageDigest/getInstance algorithm) encoding)))
+
+(defn hmac-context
+  "Create a stateful HMAC context for algorithm and key."
+  ([algorithm key]
+   (hmac-context algorithm key "UTF-8"))
+  ([algorithm key encoding]
+   (let [^bytes key-bytes (if (string? key) (string-bytes key encoding) key)
+         ^Mac mac (Mac/getInstance algorithm)]
+     (.init mac (SecretKeySpec. key-bytes algorithm))
+     (HmacContext. mac encoding))))
+
+(defn update!
+  "Update a digest or HMAC context with message, returning the context."
+  ([context message]
+   (update! context message (-context-encoding context)))
+  ([context message encoding]
+   (-update-context! context message encoding)))
+
+(defn reset!
+  "Reset a digest or HMAC context, returning the context."
+  [context]
+  (-reset-context! context))
+
+(defn digest!
+  "Finalize a digest or HMAC context and return its bytes."
+  [context]
+  (-finalize-context! context))
+
+(def finalize!
+  "Alias for digest!."
+  digest!)
 
 (def standard-algorithms
   "Standard digest algorithms with statically generated convenience functions."
@@ -166,12 +304,67 @@
   [key message]
   (hmac "HmacSHA256" key message))
 
+(defn hmac-sha1
+  "Returns hex-encoded HMAC-SHA-1 for message and key."
+  [key message]
+  (hmac "HmacSHA1" key message))
+
+(defn hmac-sha384
+  "Returns hex-encoded HMAC-SHA-384 for message and key."
+  [key message]
+  (hmac "HmacSHA384" key message))
+
+(defn hmac-sha512
+  "Returns hex-encoded HMAC-SHA-512 for message and key."
+  [key message]
+  (hmac "HmacSHA512" key message))
+
+(defn hmac-sha3-224
+  "Returns hex-encoded HMAC-SHA3-224 for message and key."
+  [key message]
+  (hmac "HmacSHA3-224" key message))
+
+(defn hmac-sha3-256
+  "Returns hex-encoded HMAC-SHA3-256 for message and key."
+  [key message]
+  (hmac "HmacSHA3-256" key message))
+
+(defn hmac-sha3-384
+  "Returns hex-encoded HMAC-SHA3-384 for message and key."
+  [key message]
+  (hmac "HmacSHA3-384" key message))
+
+(defn hmac-sha3-512
+  "Returns hex-encoded HMAC-SHA3-512 for message and key."
+  [key message]
+  (hmac "HmacSHA3-512" key message))
+
 (defn secure-eq?
-  "Constant-time equality for digest or HMAC byte arrays."
-  [a b]
-  (and (bytes? a)
-       (bytes? b)
-       (MessageDigest/isEqual a b)))
+  "Constant-time equality for digest or HMAC byte arrays.
+
+  With a third argument of `:hex` or `:base64`, decodes two digest strings
+  before comparing their bytes. Use this for secret or attacker-controlled
+  digest/signature verification instead of `=` to avoid timing side channels."
+  ([a b]
+   (and (bytes? a)
+        (bytes? b)
+        (MessageDigest/isEqual a b)))
+  ([a b encoding]
+   (let [decode (case encoding
+                  :hex (fn [^String value]
+                         (when (re-matches #"(?:[0-9A-Fa-f]{2})+" value)
+                           (hex->bytes value)))
+                  :base64 (fn [^String value]
+                            (when (re-matches #"(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?" value)
+                              (try
+                                (.decode (Base64/getDecoder) value)
+                                (catch IllegalArgumentException _
+                                  nil))))
+                  nil)]
+     (when (and decode (string? a) (string? b))
+       (let [a-bytes (decode a)
+             b-bytes (decode b)]
+         (and a-bytes b-bytes (MessageDigest/isEqual a-bytes b-bytes)))))))
 
 (defn algorithms
   "List supported digest algorithms."
@@ -184,7 +377,12 @@
 (defn algorithm?
   "Returns true if algorithm is supported by the current JVM."
   [algorithm]
-  (contains? (algorithms) algorithm))
+  (and (string? algorithm)
+       (try
+         (MessageDigest/getInstance algorithm)
+         true
+         (catch java.security.NoSuchAlgorithmException _
+           false))))
 
 (defn- create-fn!
   [algorithm-name]
