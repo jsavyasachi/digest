@@ -199,6 +199,13 @@
     (is (not (d/algorithm? "NOPE")))
     (is (contains? d/standard-algorithms "SHA-256"))))
 
+(deftest algorithm-resolution-test
+  (is (true? (d/algorithm? "sha-256")))
+  (is (true? (d/algorithm? "SHA256")))
+  (is (false? (d/algorithm? nil)))
+  (is (false? (d/algorithm? 256)))
+  (is (false? (d/algorithm? "NOPE"))))
+
 (deftest utils-test
   ;; Every algorithm that the JVM supplies must have a matching convenience fn.
   ;; The standard set is statically generated. The fallback interns the rest.

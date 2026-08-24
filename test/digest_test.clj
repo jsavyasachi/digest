@@ -113,6 +113,13 @@
     (is (not (empty? names)))
     (is (names "SHA-1"))))
 
+(deftest algorithm-resolution-test
+  (is (true? (algorithm? "sha-256")))
+  (is (true? (algorithm? "SHA256")))
+  (is (false? (algorithm? nil)))
+  (is (false? (algorithm? 256)))
+  (is (false? (algorithm? "NOPE"))))
+
 (deftest utils-test
   ;; Previously a lazy `for`, so these assertions never ran.
   (doseq [name (algorithms)]
