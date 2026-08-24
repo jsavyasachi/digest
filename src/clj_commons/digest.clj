@@ -30,9 +30,40 @@
   "Get hex signature for digest bytes."
   [^bytes digest]
   (let [size (* 2 (alength digest))
-        sig (.toString (BigInteger. 1 digest) 16)
+        sig (if (zero? size)
+              ""
+              (.toString (BigInteger. 1 digest) 16))
         padding (join (repeat (- size (count sig)) "0"))]
     (str padding sig)))
+
+(defn bytes->hex
+  "Returns a lowercase hexadecimal string for byte array, or nil for nil."
+  [^bytes bytes]
+  (some-> bytes signature))
+
+(defn hex->bytes
+  "Returns bytes for a hexadecimal string, or nil for nil.
+
+  Hexadecimal input is case-insensitive and must contain an even number of
+  valid hexadecimal characters."
+  ^bytes [^String hex]
+  (when (some? hex)
+    (let [length (.length hex)]
+      (when (odd? length)
+        (throw (IllegalArgumentException.
+                "Hexadecimal string must have an even length")))
+      (let [bytes (byte-array (quot length 2))
+            chars (.toCharArray hex)]
+        (dotimes [index (quot length 2)]
+          (let [offset (* 2 index)
+                high (Character/digit (aget chars offset) 16)
+                low (Character/digit (aget chars (inc offset)) 16)]
+            (when (or (neg? high) (neg? low))
+              (throw (IllegalArgumentException.
+                      "Hexadecimal string contains an invalid character")))
+            (aset-byte bytes index
+                       (unchecked-byte (+ (* 16 high) low)))))
+        bytes))))
 
 (defn- base64 [^bytes digest]
   (.encodeToString (Base64/getEncoder) digest))
