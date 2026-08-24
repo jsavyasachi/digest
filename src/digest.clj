@@ -5,6 +5,7 @@
     :deprecated true
     :no-doc true}
   digest
+  (:refer-clojure :exclude [reset!])
   (:require [clojure.string :refer [join lower-case split]])
   (:import (java.io File FileInputStream InputStream)
            java.nio.charset.Charset
@@ -94,6 +95,76 @@
     nil)
   (-update-mac! [_message _mac _encoding]
     nil))
+
+(defprotocol IncrementalContext
+  (-context-encoding [context])
+  (-update-context! [context message encoding])
+  (-reset-context! [context])
+  (-finalize-context! [context]))
+
+(deftype DigestContext [^MessageDigest state ^String encoding]
+  IncrementalContext
+  (-context-encoding [_context]
+    encoding)
+  (-update-context! [context message update-encoding]
+    (-update-digest! message state update-encoding)
+    context)
+  (-reset-context! [context]
+    (.reset state)
+    context)
+  (-finalize-context! [_context]
+    (.digest state)))
+
+(deftype HmacContext [^Mac state ^String encoding]
+  IncrementalContext
+  (-context-encoding [_context]
+    encoding)
+  (-update-context! [context message update-encoding]
+    (-update-mac! message state update-encoding)
+    context)
+  (-reset-context! [context]
+    (.reset state)
+    context)
+  (-finalize-context! [_context]
+    (.doFinal state)))
+
+(defn digest-context
+  "Create a stateful digest context for algorithm."
+  ([algorithm]
+   (digest-context algorithm "UTF-8"))
+  ([algorithm encoding]
+   (DigestContext. (MessageDigest/getInstance algorithm) encoding)))
+
+(defn hmac-context
+  "Create a stateful HMAC context for algorithm and key."
+  ([algorithm key]
+   (hmac-context algorithm key "UTF-8"))
+  ([algorithm key encoding]
+   (let [^bytes key-bytes (if (string? key) (string-bytes key encoding) key)
+         ^Mac mac (Mac/getInstance algorithm)]
+     (.init mac (SecretKeySpec. key-bytes algorithm))
+     (HmacContext. mac encoding))))
+
+(defn update!
+  "Update a digest or HMAC context with message, returning the context."
+  ([context message]
+   (update! context message (-context-encoding context)))
+  ([context message encoding]
+   (-update-context! context message encoding)))
+
+(defn reset!
+  "Reset a digest or HMAC context, returning the context."
+  [context]
+  (-reset-context! context))
+
+(defn digest!
+  "Finalize a digest or HMAC context and return its bytes."
+  [context]
+  (-finalize-context! context))
+
+(def finalize!
+  "Alias for digest!."
+  digest!)
 
 (def standard-algorithms
   "Standard digest algorithms with statically generated convenience functions."

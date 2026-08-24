@@ -73,6 +73,22 @@
          (.encodeToString (Base64/getEncoder)
                           (d/hmac-bytes "HmacSHA256" "secret" "message")))))
 
+(deftest incremental-context-test
+  (let [context (d/digest-context "SHA-256")]
+    (d/update! context (utf-8-bytes "clo"))
+    (d/update! context (utf-8-bytes "jure"))
+    (is (= (seq (d/digest! context))
+           (seq (d/digest-bytes "SHA-256" "clojure"))))
+    (d/reset! context)
+    (d/update! context "clojure")
+    (is (= (seq (d/finalize! context))
+           (seq (d/digest-bytes "SHA-256" "clojure")))))
+  (let [context (d/hmac-context "HmacSHA256" "secret")]
+    (d/update! context "mess" "UTF-8")
+    (d/update! context (utf-8-bytes "age"))
+    (is (= (seq (d/digest! context))
+           (seq (d/hmac-bytes "HmacSHA256" "secret" "message"))))))
+
 (deftest secure-eq-test
   (is (d/secure-eq? (d/digest-bytes "SHA-256" "a")
                     (d/digest-bytes "SHA-256" "a")))
