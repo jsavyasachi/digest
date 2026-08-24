@@ -3,7 +3,9 @@
             [clojure.string :refer [lower-case includes?]]
             [clojure.test :refer :all]
             [digest :refer :all])
-  (:import java.io.File))
+  (:import (java.io ByteArrayInputStream File)
+           java.nio.ByteBuffer
+           java.nio.channels.Channels))
 
 (deftest md5-test
   (is (= (digest "md5" "clojure") "32c0d97f82a20e67c6d184620f6bd322")))
@@ -75,3 +77,12 @@
 (deftest length-test
   (is (= (sha (File. "test/quote.txt"))
          "dc93ad3c1e212bf598b9bf700914e832c9bdade5")))
+
+(deftest nio-input-types-parity-test
+  (let [bytes (.getBytes "clojure" "UTF-8")
+        buffer (ByteBuffer/wrap bytes)
+        channel (Channels/newChannel (ByteArrayInputStream. bytes))]
+    (is (= (md5 buffer) (canonical/md5 (ByteBuffer/wrap bytes))))
+    (is (= (md5 channel) (canonical/md5 (Channels/newChannel (ByteArrayInputStream. bytes)))))
+    (is (= (hmac "HmacSHA256" "secret" (ByteBuffer/wrap bytes))
+           (canonical/hmac "HmacSHA256" "secret" (ByteBuffer/wrap bytes))))))

@@ -3,8 +3,13 @@
             [clojure.string :refer [lower-case includes?]]
             [clojure.test :refer [deftest is]])
   (:import (java.io ByteArrayInputStream File)
-           java.util.Base64
+           java.net.URI
+           java.nio.ByteBuffer
            (java.nio.charset StandardCharsets)
+           java.nio.file.FileSystems
+           java.nio.file.Files
+           java.util.Base64
+           java.util.HashMap
            java.security.NoSuchAlgorithmException))
 
 (defn utf-8-bytes ^bytes [^String s]
@@ -52,6 +57,33 @@
   (binding [d/*buffer-size* 3]
     (is (= (d/sha-256 (ByteArrayInputStream. (utf-8-bytes "clojure")))
            "4f3ea34e0a3a6196a18ec24b51c02b41d5f15bd04b4a94aa29e4f6badba0f5b0"))))
+
+(deftest nio-input-types-test
+  (let [bytes (utf-8-bytes "clojure")
+        buffer (doto (ByteBuffer/wrap (utf-8-bytes "xclojure"))
+                 (.position 1))
+        channel (java.nio.channels.Channels/newChannel
+                 (ByteArrayInputStream. bytes))
+        archive (Files/createTempFile "digest" ".zip" (make-array java.nio.file.attribute.FileAttribute 0))
+        _ (Files/delete archive)
+        fs (FileSystems/newFileSystem
+            (URI/create (str "jar:" (.toUri archive)))
+            (doto (HashMap.) (.put "create" "true")))
+        path (.getPath fs "/message" (make-array String 0))
+        options ^"[Ljava.nio.file.OpenOption;" (make-array java.nio.file.OpenOption 0)
+        remaining (ByteBuffer/allocate 1)]
+    (try
+      (Files/write path bytes options)
+      (is (= (d/md5 bytes) (d/md5 buffer)))
+      (is (= (.limit buffer) (.position buffer)))
+      (is (= (d/md5 bytes) (d/md5 channel)))
+      (is (= -1 (.read channel remaining)))
+      (is (= (d/md5 bytes) (d/md5 path)))
+      (is (= (d/hmac "HmacSHA256" "secret" bytes)
+             (d/hmac "HmacSHA256" "secret" path)))
+      (finally
+        (.close fs)
+        (Files/deleteIfExists archive)))))
 
 (deftest string-uses-utf-8-compatible-bytes-test
   (is (= (d/sha-256 "café")
