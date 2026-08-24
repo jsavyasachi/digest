@@ -7,7 +7,11 @@
   digest
   (:require [clojure.string :refer [join lower-case split]])
   (:import (java.io File FileInputStream InputStream)
+           java.nio.ByteBuffer
            java.nio.charset.Charset
+           java.nio.channels.ReadableByteChannel
+           java.nio.file.Files
+           java.nio.file.Path
            (java.security MessageDigest Provider Security)
            (java.util Arrays Base64)
            javax.crypto.Mac
@@ -79,6 +83,32 @@
                          (fn [^bytes buffer size]
                            (.update ^Mac mac buffer 0 size))))
 
+  ByteBuffer
+  (-update-digest! [buffer algorithm _encoding]
+    (.update ^MessageDigest algorithm ^ByteBuffer buffer))
+  (-update-mac! [buffer mac _encoding]
+    (.update ^Mac mac ^ByteBuffer buffer))
+
+  ReadableByteChannel
+  (-update-digest! [channel algorithm _encoding]
+    (let [^ByteBuffer buffer (ByteBuffer/allocate *buffer-size*)]
+      (loop [read (.read channel buffer)]
+        (when (not= -1 read)
+          (when (pos? read)
+            (.flip buffer)
+            (.update ^MessageDigest algorithm buffer))
+          (.clear buffer)
+          (recur (.read channel buffer))))))
+  (-update-mac! [channel mac _encoding]
+    (let [^ByteBuffer buffer (ByteBuffer/allocate *buffer-size*)]
+      (loop [read (.read channel buffer)]
+        (when (not= -1 read)
+          (when (pos? read)
+            (.flip buffer)
+            (.update ^Mac mac buffer))
+          (.clear buffer)
+          (recur (.read channel buffer))))))
+
   File
   (-update-digest! [file algorithm encoding]
     (with-open [f (FileInputStream. file)]
@@ -86,6 +116,14 @@
   (-update-mac! [file mac encoding]
     (with-open [f (FileInputStream. file)]
       (-update-mac! f mac encoding)))
+
+  Path
+  (-update-digest! [path algorithm encoding]
+    (with-open [reader (Files/newInputStream path (make-array java.nio.file.OpenOption 0))]
+      (-update-digest! reader algorithm encoding)))
+  (-update-mac! [path mac encoding]
+    (with-open [reader (Files/newInputStream path (make-array java.nio.file.OpenOption 0))]
+      (-update-mac! reader mac encoding)))
 
   nil
   (-update-digest! [_message _algorithm _encoding]
