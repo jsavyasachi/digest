@@ -164,11 +164,38 @@
   (hmac "HmacSHA256" key message))
 
 (defn secure-eq?
-  "Constant-time equality for digest or HMAC byte arrays."
-  [a b]
-  (and (bytes? a)
-       (bytes? b)
-       (MessageDigest/isEqual a b)))
+  "Constant-time equality for digest or HMAC byte arrays.
+
+  With a third argument of `:hex` or `:base64`, decodes two digest strings
+  before comparing their bytes. Use this for secret or attacker-controlled
+  digest/signature verification instead of `=` to avoid timing side channels."
+  ([a b]
+   (and (bytes? a)
+        (bytes? b)
+        (MessageDigest/isEqual a b)))
+  ([a b encoding]
+   (let [decode (case encoding
+                  :hex (fn [^String value]
+                         (when (re-matches #"(?:[0-9A-Fa-f]{2})+" value)
+                           (let [result (byte-array (/ (count value) 2))]
+                             (dotimes [i (alength result)]
+                               (aset-byte result i
+                                          (unchecked-byte
+                                           (Integer/parseInt
+                                            (subs value (* 2 i) (+ 2 (* 2 i)))
+                                            16))))
+                             result)))
+                  :base64 (fn [^String value]
+                            (when (re-matches #"(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?" value)
+                              (try
+                                (.decode (Base64/getDecoder) value)
+                                (catch IllegalArgumentException _
+                                  nil))))
+                  nil)]
+     (when (and decode (string? a) (string? b))
+       (let [a-bytes (decode a)
+             b-bytes (decode b)]
+         (and a-bytes b-bytes (MessageDigest/isEqual a-bytes b-bytes)))))))
 
 (defn algorithms
   "List supported digest algorithms."

@@ -79,6 +79,18 @@
   (is (not (d/secure-eq? (d/digest-bytes "SHA-256" "a")
                          (d/digest-bytes "SHA-256" "b")))))
 
+(deftest secure-encoded-eq-test
+  (let [hex (d/sha-256 "clojure")
+        base64 (d/digest-base64 "SHA-256" "clojure")]
+    (is (d/secure-eq? hex hex :hex))
+    (is (d/secure-eq? hex (.toUpperCase ^String hex) :hex))
+    (is (not (d/secure-eq? hex (d/sha-256 "different") :hex)))
+    (is (d/secure-eq? base64 base64 :base64))
+    (is (not (d/secure-eq? base64 (d/digest-base64 "SHA-256" "different") :base64)))
+    (is (not (d/secure-eq? "not-hex" "not-hex" :hex)))
+    (is (not (d/secure-eq? "not-base64" "not-base64" :base64)))
+    (is (not (d/secure-eq? hex hex :unknown)))))
+
 (deftest algorithms-test
   (let [names (d/algorithms)]
     (is (seq names))

@@ -42,6 +42,32 @@
   (is (= (algorithm? "SHA-256")
          (canonical/algorithm? "SHA-256"))))
 
+(deftest secure-encoded-eq-test
+  (let [hex (sha-256 "clojure")
+        base64 (digest-base64 "SHA-256" "clojure")]
+    (is (secure-eq? hex hex :hex))
+    (is (secure-eq? hex (.toUpperCase ^String hex) :hex))
+    (is (not (secure-eq? hex (sha-256 "different") :hex)))
+    (is (secure-eq? base64 base64 :base64))
+    (is (not (secure-eq? base64 (digest-base64 "SHA-256" "different") :base64)))
+    (is (not (secure-eq? "not-hex" "not-hex" :hex)))
+    (is (not (secure-eq? "not-base64" "not-base64" :base64)))
+    (is (not (secure-eq? hex hex :unknown)))))
+
+(deftest secure-encoded-eq-parity-test
+  (is (= (secure-eq? (sha-256 "clojure")
+                     (.toUpperCase ^String (sha-256 "clojure"))
+                     :hex)
+         (canonical/secure-eq? (canonical/sha-256 "clojure")
+                               (.toUpperCase ^String (canonical/sha-256 "clojure"))
+                               :hex)))
+  (is (= (secure-eq? (digest-base64 "SHA-256" "clojure")
+                     (digest-base64 "SHA-256" "clojure")
+                     :base64)
+         (canonical/secure-eq? (canonical/digest-base64 "SHA-256" "clojure")
+                               (canonical/digest-base64 "SHA-256" "clojure")
+                               :base64))))
+
 (deftest algorithms-test
   (let [names (algorithms)]
     (is (not (empty? names)))
