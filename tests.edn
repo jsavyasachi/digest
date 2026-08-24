@@ -1,2 +1,3 @@
 #kaocha/v1
-{}
+{:kaocha.filter/skip-meta [:benchmark]
+ :kaocha/profiles {:benchmark {:kaocha.filter/skip-meta []}}}

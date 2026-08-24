@@ -13,22 +13,16 @@
            javax.crypto.Mac
            javax.crypto.spec.SecretKeySpec))
 
-; Default buffer size for reading
-(def ^:dynamic *buffer-size* 1024)
+; Default buffer size for streaming reads, matching the common Java I/O default.
+(def ^:dynamic *buffer-size* 65536)
 
-(defn- read-some
-  "Read some data from reader. Return [data size] if there's more to read,
-  otherwise nil."
-  [^InputStream reader]
-  (let [^bytes buffer (make-array Byte/TYPE *buffer-size*)
-        size (.read reader buffer)]
-    (when (pos? size)
-      (if (= size *buffer-size*) buffer (Arrays/copyOf buffer size)))))
-
-(defn- byte-seq
-  "Return a sequence of [data size] from reader."
-  [^InputStream reader]
-  (take-while some? (repeatedly (partial read-some reader))))
+(defn- update-from-stream!
+  [^InputStream reader updater]
+  (let [^bytes buffer (make-array Byte/TYPE *buffer-size*)]
+    (loop [size (.read reader buffer 0 *buffer-size*)]
+      (when (pos? size)
+        (updater buffer size)
+        (recur (.read reader buffer 0 *buffer-size*))))))
 
 (defn- signature
   "Get hex signature for digest bytes."
@@ -77,9 +71,13 @@
 
   InputStream
   (-update-digest! [reader algorithm encoding]
-    (-update-digest! (byte-seq reader) algorithm encoding))
+    (update-from-stream! reader
+                         (fn [^bytes buffer size]
+                           (.update ^MessageDigest algorithm buffer 0 size))))
   (-update-mac! [reader mac encoding]
-    (-update-mac! (byte-seq reader) mac encoding))
+    (update-from-stream! reader
+                         (fn [^bytes buffer size]
+                           (.update ^Mac mac buffer 0 size))))
 
   File
   (-update-digest! [file algorithm encoding]

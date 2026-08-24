@@ -2,13 +2,34 @@
   (:require [clj-commons.digest :as d]
             [clojure.string :refer [lower-case includes?]]
             [clojure.test :refer [deftest is]])
-  (:import (java.io ByteArrayInputStream File)
-           java.util.Base64
-           (java.nio.charset StandardCharsets)
-           java.security.NoSuchAlgorithmException))
+  (:import (java.io ByteArrayInputStream File InputStream)
+            (java.util Arrays Base64)
+            (java.nio.charset StandardCharsets)
+            (java.security MessageDigest NoSuchAlgorithmException)))
 
 (defn utf-8-bytes ^bytes [^String s]
   (.getBytes s StandardCharsets/UTF_8))
+
+(defn partial-input-stream [^bytes data ^long chunk-size buffers]
+  (let [position (atom 0)]
+    (proxy [InputStream] []
+      (read
+       ([] (if (< @position (alength data))
+             (let [value (aget data @position)]
+               (swap! position inc)
+               (bit-and value 0xff))
+             -1))
+       ([^bytes buffer]
+        (.read ^InputStream this buffer 0 (alength buffer)))
+       ([^bytes buffer ^long offset ^long length]
+        (when buffers
+          (swap! buffers conj buffer))
+        (if (>= @position (alength data))
+          -1
+          (let [size (min chunk-size length (- (alength data) @position))]
+            (System/arraycopy data @position buffer offset size)
+            (swap! position + size)
+            size)))))))
 
 (deftest md5-test
   (is (= (d/digest "md5" "clojure") "32c0d97f82a20e67c6d184620f6bd322")))
@@ -52,6 +73,18 @@
   (binding [d/*buffer-size* 3]
     (is (= (d/sha-256 (ByteArrayInputStream. (utf-8-bytes "clojure")))
            "4f3ea34e0a3a6196a18ec24b51c02b41d5f15bd04b4a94aa29e4f6badba0f5b0"))))
+
+(deftest input-stream-reuses-buffer-test
+  (let [buffers (atom [])
+        input (partial-input-stream (utf-8-bytes "clojure streaming") 2 buffers)]
+    (is (= (d/sha-256 input)
+           (d/sha-256 (utf-8-bytes "clojure streaming"))))
+    (is (= 1 (count (distinct (map identity @buffers)))))))
+
+(deftest input-stream-hmac-partial-read-test
+  (let [input (partial-input-stream (utf-8-bytes "clojure streaming") 2 (atom []))]
+    (is (= (d/hmac-sha-256 "secret" input)
+           (d/hmac-sha-256 "secret" "clojure streaming")))))
 
 (deftest string-uses-utf-8-compatible-bytes-test
   (is (= (d/sha-256 "café")
@@ -121,3 +154,42 @@
 (deftest invalid-algorithm-test
   (is (thrown? NoSuchAlgorithmException
                (d/digest "NOPE" "clojure"))))
+
+(def ^:private benchmark-size (* 96 1024 1024))
+
+(defn- synthetic-input []
+  (let [data (byte-array benchmark-size)]
+    (dotimes [index benchmark-size]
+      (aset-byte data index (unchecked-byte (bit-and index 0xff))))
+    data))
+
+(defn- old-streaming-digest [^InputStream input]
+  (let [^MessageDigest digest (MessageDigest/getInstance "MD5")
+        ^bytes buffer (byte-array 1024)]
+    (loop [size (.read input buffer)]
+      (when (pos? size)
+        (.update digest (if (= size 1024) buffer (Arrays/copyOf buffer size)))
+        (recur (.read input buffer))))
+    (.digest digest)))
+
+(deftest ^:benchmark streaming-benchmark-test
+  (let [data (synthetic-input)
+        expected (d/digest-bytes "MD5" data)
+        timed (fn [f]
+                (let [start (System/nanoTime)
+                      result (f)]
+                  [(- (System/nanoTime) start) result]))
+        [_ old-result] (timed #(old-streaming-digest
+                                (partial-input-stream data 1000 nil)))
+        [_ new-result] (timed #(d/digest-bytes "MD5"
+                                               (partial-input-stream data 1000 nil)))
+        [old-ns _] (timed #(old-streaming-digest
+                            (partial-input-stream data 1000 nil)))
+        [new-ns _] (timed #(d/digest-bytes "MD5"
+                                           (partial-input-stream data 1000 nil)))]
+    (is (= (seq expected) (seq old-result)))
+    (is (= (seq expected) (seq new-result)))
+    (println (format "streaming benchmark: old=%.1f ms new=%.1f ms speedup=%.2fx"
+                     (/ old-ns 1e6)
+                     (/ new-ns 1e6)
+                     (/ (double old-ns) new-ns)))))
