@@ -181,7 +181,12 @@
 (defn algorithm?
   "Returns true if algorithm is supported by the current JVM."
   [algorithm]
-  (contains? (algorithms) algorithm))
+  (and (string? algorithm)
+       (try
+         (MessageDigest/getInstance algorithm)
+         true
+         (catch java.security.NoSuchAlgorithmException _
+           false))))
 
 (defn- create-fn!
   [algorithm-name]
