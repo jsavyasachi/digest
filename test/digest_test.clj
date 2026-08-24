@@ -1,4 +1,5 @@
 (ns digest-test
+  (:refer-clojure :exclude [reset!])
   (:require [clj-commons.digest :as canonical]
             [clj-commons.digest-test :as shared]
             [clojure.string :refer [lower-case includes?]]
@@ -44,6 +45,22 @@
          (canonical/hmac-sha-256 "secret" "message")))
   (is (= (algorithm? "SHA-256")
          (canonical/algorithm? "SHA-256"))))
+
+(deftest legacy-incremental-context-parity-test
+  (let [legacy (digest-context "SHA-256")
+        canonical-context (canonical/digest-context "SHA-256")]
+    (update! legacy "clo")
+    (update! legacy "jure")
+    (canonical/update! canonical-context "clo")
+    (canonical/update! canonical-context "jure")
+    (is (= (seq (digest! legacy))
+           (seq (canonical/digest! canonical-context)))))
+  (let [legacy (hmac-context "HmacSHA256" "secret")
+        canonical-context (canonical/hmac-context "HmacSHA256" "secret")]
+    (update! legacy "message")
+    (canonical/update! canonical-context "message")
+    (is (= (seq (finalize! legacy))
+           (seq (canonical/finalize! canonical-context))))))
 
 (deftest algorithms-test
   (let [names (algorithms)]
