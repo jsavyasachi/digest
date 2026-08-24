@@ -10,3 +10,5 @@ target
 .cpcache/
 target/
 release-notes.md
+.worktrees/
+.codex-runs/

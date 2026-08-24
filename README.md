@@ -27,13 +27,13 @@ Each function accepts these input types:
 tools.deps (`deps.edn`):
 
 ``` clojure
-net.clojars.savya/digest {:mvn/version "1.5.4"}
+net.clojars.savya/digest {:mvn/version "1.6.0"}
 ```
 
 Leiningen (`project.clj`):
 
 ``` clojure
-[net.clojars.savya/digest "1.5.4"]
+[net.clojars.savya/digest "1.6.0"]
 ```
 
 ## Usage
