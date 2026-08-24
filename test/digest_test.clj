@@ -1,5 +1,6 @@
 (ns digest-test
   (:require [clj-commons.digest :as canonical]
+            [clj-commons.digest-test :as shared]
             [clojure.string :refer [lower-case includes?]]
             [clojure.test :refer :all]
             [digest :refer :all])
@@ -75,3 +76,11 @@
 (deftest length-test
   (is (= (sha (File. "test/quote.txt"))
          "dc93ad3c1e212bf598b9bf700914e832c9bdade5")))
+
+(deftest legacy-input-stream-reuses-buffer-test
+  (let [buffers (atom [])
+        input (shared/partial-input-stream
+               (.getBytes "clojure streaming" "UTF-8") 2 buffers)]
+    (is (= (sha-256 input)
+           (sha-256 (.getBytes "clojure streaming" "UTF-8"))))
+    (is (= 1 (count (distinct (map identity @buffers)))))))
