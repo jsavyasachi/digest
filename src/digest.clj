@@ -304,6 +304,41 @@
   [key message]
   (hmac "HmacSHA256" key message))
 
+(defn hmac-sha1
+  "Returns hex-encoded HMAC-SHA-1 for message and key."
+  [key message]
+  (hmac "HmacSHA1" key message))
+
+(defn hmac-sha384
+  "Returns hex-encoded HMAC-SHA-384 for message and key."
+  [key message]
+  (hmac "HmacSHA384" key message))
+
+(defn hmac-sha512
+  "Returns hex-encoded HMAC-SHA-512 for message and key."
+  [key message]
+  (hmac "HmacSHA512" key message))
+
+(defn hmac-sha3-224
+  "Returns hex-encoded HMAC-SHA3-224 for message and key."
+  [key message]
+  (hmac "HmacSHA3-224" key message))
+
+(defn hmac-sha3-256
+  "Returns hex-encoded HMAC-SHA3-256 for message and key."
+  [key message]
+  (hmac "HmacSHA3-256" key message))
+
+(defn hmac-sha3-384
+  "Returns hex-encoded HMAC-SHA3-384 for message and key."
+  [key message]
+  (hmac "HmacSHA3-384" key message))
+
+(defn hmac-sha3-512
+  "Returns hex-encoded HMAC-SHA3-512 for message and key."
+  [key message]
+  (hmac "HmacSHA3-512" key message))
+
 (defn secure-eq?
   "Constant-time equality for digest or HMAC byte arrays."
   [a b]
