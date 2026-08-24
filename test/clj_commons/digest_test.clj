@@ -114,6 +114,19 @@
 (deftest nil-test
   (is (nil? (d/md5 nil))))
 
+(deftest hex-encoding-test
+  (let [bytes (byte-array [(byte 0) (byte 1) (byte 15) (byte 127)
+                           (byte -128) (byte -1)])]
+    (is (= "00010f7f80ff" (d/bytes->hex bytes)))
+    (is (= (seq bytes) (seq (d/hex->bytes "00010F7F80FF"))))
+    (is (= (seq bytes) (seq (d/hex->bytes "00010f7f80ff"))))
+    (is (= "" (d/bytes->hex (byte-array 0))))
+    (is (empty? (d/hex->bytes "")))
+    (is (nil? (d/bytes->hex nil)))
+    (is (nil? (d/hex->bytes nil)))
+    (is (thrown? IllegalArgumentException (d/hex->bytes "abc")))
+    (is (thrown? IllegalArgumentException (d/hex->bytes "00xz")))))
+
 (deftest length-test
   (is (= (d/sha (File. "test/quote.txt"))
          "dc93ad3c1e212bf598b9bf700914e832c9bdade5")))
