@@ -11,7 +11,7 @@
            java.nio.file.Files
            java.nio.file.Path
            (java.security MessageDigest Provider Security)
-           (java.util Arrays Base64)
+           (java.util Base64)
            javax.crypto.Mac
            javax.crypto.spec.SecretKeySpec))
 
@@ -79,6 +79,7 @@
   (-update-mac! [message mac encoding]))
 
 (extend-protocol Digestible
+  #_:clj-kondo/ignore
   (class (make-array Byte/TYPE 0))
   (-update-digest! [message algorithm _encoding]
     (.update ^MessageDigest algorithm ^bytes message))
@@ -103,11 +104,11 @@
     (-update-mac! (string-bytes message encoding) mac encoding))
 
   InputStream
-  (-update-digest! [reader algorithm encoding]
+  (-update-digest! [reader algorithm _encoding]
     (update-from-stream! reader
                          (fn [^bytes buffer size]
                            (.update ^MessageDigest algorithm buffer 0 size))))
-  (-update-mac! [reader mac encoding]
+  (-update-mac! [reader mac _encoding]
     (update-from-stream! reader
                          (fn [^bytes buffer size]
                            (.update ^Mac mac buffer 0 size))))

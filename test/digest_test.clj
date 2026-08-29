@@ -3,8 +3,14 @@
   (:require [clj-commons.digest :as canonical]
             [clj-commons.digest-test :as shared]
             [clojure.string :refer [lower-case includes?]]
-            [clojure.test :refer :all]
-            [digest :refer :all])
+            [clojure.test :refer [deftest is]]
+            #_{:clj-kondo/ignore [:deprecated-namespace]}
+            [digest :refer [algorithm? algorithms bytes->hex digest digest! digest-base64
+                            digest-bytes digest-context finalize! hex->bytes hmac hmac-context
+                            hmac-sha-256 hmac-sha1 hmac-sha3-224 hmac-sha3-256 hmac-sha3-384
+                            hmac-sha3-512 hmac-sha384 hmac-sha512 md2 md5 secure-eq? sha sha-1
+                            sha-224 sha-256 sha-384 sha-512 sha1 sha3-224 sha3-256 sha3-384
+                            sha3-512 update!]])
   (:import (java.io ByteArrayInputStream File)
            java.nio.ByteBuffer
            java.nio.channels.Channels
