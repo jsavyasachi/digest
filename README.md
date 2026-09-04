@@ -2,7 +2,7 @@
 
 [![Clojars Project](https://img.shields.io/clojars/v/net.clojars.savya/digest.svg)](https://clojars.org/net.clojars.savya/digest)
 [![cljdoc](https://cljdoc.org/badge/net.clojars.savya/digest)](https://cljdoc.org/d/net.clojars.savya/digest)
-[![test](https://github.com/jsavyasachi/digest/actions/workflows/test.yml/badge.svg)](https://github.com/jsavyasachi/digest/actions/workflows/test.yml)
+[![test](https://github.com/savyalabs/digest/actions/workflows/test.yml/badge.svg)](https://github.com/savyalabs/digest/actions/workflows/test.yml)
 
 A message digest library for Clojure: `md5`, `sha-256`, HMAC, raw bytes, and
 base64 output.

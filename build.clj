@@ -24,12 +24,12 @@
                 :version version
                 :basis @basis
                 :src-dirs ["src"]
-                :scm {:url "https://github.com/jsavyasachi/digest"
-                      :connection "scm:git:https://github.com/jsavyasachi/digest.git"
-                      :developerConnection "scm:git:ssh://git@github.com/jsavyasachi/digest.git"
+                :scm {:url "https://github.com/savyalabs/digest"
+                      :connection "scm:git:https://github.com/savyalabs/digest.git"
+                      :developerConnection "scm:git:ssh://git@github.com/savyalabs/digest.git"
                       :tag (str "v" version)}
                 :pom-data [[:description "Digest algorithms (MD5, SHA ...) for Clojure"]
-                           [:url "https://github.com/jsavyasachi/digest"]
+                           [:url "https://github.com/savyalabs/digest"]
                            [:licenses
                             [:license
                              [:name "Eclipse Public License 1.0"]
